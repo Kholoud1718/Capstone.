@@ -7,71 +7,127 @@ import './styles.css';
 
 // App Component with Scheduler logic
 const App = () => {
-    const [script, setScript] = useState(''); 
+    const [script, setScript] = useState('');
     const [interval, setInterval] = useState('Daily');
     const [day, setDay] = useState('Monday');
     const [time, setTime] = useState('01:00');
     const [date, setDate] = useState('');
-    const [scheduledJobs, setScheduledJobs] = useState(JSON.parse(localStorage.getItem('scheduledJobs')) || []);
+    const [scheduledJobs, setScheduledJobs] = useState([]);
     const [instantUrl, setInstantUrl] = useState(''); // Separate state for Instant Scan URL
     const [scheduledUrl, setScheduledUrl] = useState(''); // Separate state for Scheduled Scan URL
+    const [instantScanType, setInstantScanType] = useState(''); // New state for instant scan type
 
-    // To load the schedule data from local storage
+    // Load scheduled tasks from backend when component mounts
     useEffect(() => {
-        localStorage.removeItem('script'); 
+        fetchScheduledJobs();
     }, []);
 
-    // Save the schedule to local storage
-    useEffect(() => {
-        localStorage.setItem('script', script);
-        localStorage.setItem('interval', interval);
-        localStorage.setItem('day', day);
-        localStorage.setItem('time', time);
-        localStorage.setItem('date', date);
-        localStorage.setItem('scheduledUrl', scheduledUrl);
-        localStorage.setItem('scheduledJobs', JSON.stringify(scheduledJobs));
-    }, [script, interval, day, time, date, scheduledUrl, scheduledJobs]);
+    const fetchScheduledJobs = async () => {
+        try {
+            const response = await fetch('/api/scheduled-scans');
+            const jobs = await response.json();
+            setScheduledJobs(jobs); // Set the fetched jobs to state
+        } catch (error) {
+            console.error('Error fetching scheduled jobs:', error);
+        }
+    };
 
     // Function to schedule the task
-    const scheduleScript = () => {
+    const scheduleScript = async () => {
         if (!script || (interval === 'Monthly' && !date) || !scheduledUrl) {
             alert('Please fill in all fields before scheduling a task!');
             return;
         }
 
-        const newJob = { script, interval, day, time, date: interval === 'Monthly' ? date : '', scheduledUrl };
-        setScheduledJobs([...scheduledJobs, newJob]);
+        try {
+            const response = await fetch('/api/schedule-scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    url: scheduledUrl, // Ensure 'url' is being passed correctly
+                    interval,
+                    day,
+                    time,
+                    date,
+                    script,
+                }),
+            });
+
+            if (response.ok) {
+                alert('Task successfully scheduled!');
+                fetchScheduledJobs(); // Fetch updated jobs
+            } else {
+                const result = await response.text();
+                alert('Error scheduling the task: ' + result);
+            }
+        } catch (error) {
+            console.error('Error scheduling task:', error);
+            alert(`An error occurred while scheduling the task: ${error.message}`);
+        }
+
         setScheduledUrl('');
         setDate('');
         setScript('');
-
-        // Pop-up message for successful scheduling
-        alert('Task successfully scheduled!');
     };
 
-// Function to perform an instant scan
-const performInstantScan = () => {
-    if (!instantUrl) {
-        alert('Please enter a URL for the instant scan!');
-        return;
-    }
+    // Function to perform an instant scan with URL and scan type validation
+    const performInstantScan = async () => {
+        if (!instantUrl || !instantScanType) { // Ensure both URL and scan type are selected
+            alert('Please enter a URL and select a scan type for the instant scan!');
+            return;
+        }
 
-    // Logic to perform the instant scan (e.g., API call)
+        // Validate the URL format
+        if (!/^https?:\/\/.+\..+$/.test(instantUrl)) {
+            alert('Please enter a valid URL that starts with http:// or https:// and has a valid domain.');
+            return;
+        }
 
-    // Pop-up message for the instant scan
-    alert(`Instant scan started for: ${instantUrl}. Please visit the Dashboard to view the scan results.`);
-    
-    // Refresh the page after the pop-up message
-    window.location.reload(); // This will refresh the page
-};
+        try {
+            const response = await fetch('/api/instant-scan', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: instantUrl, scanType: instantScanType }),  // Include scanType in the request
+            });
+
+            if (response.ok) {
+                alert(`Instant scan started for: ${instantUrl} with scan type: ${instantScanType}. Please visit the Dashboard to view the scan results.`);
+            } else {
+                const result = await response.text();
+                alert('Error starting instant scan: ' + result);
+            }
+        } catch (error) {
+            console.error('Error performing instant scan:', error);
+            alert(`An error occurred during the scan: ${error.message}`);
+        }
+
+        window.location.reload();
+    };
 
     // Function to delete a scheduled task
-    const deleteTask = (index) => {
+    const deleteTask = async (index) => {
         const confirmDelete = window.confirm('Are you sure you want to delete this task?');
         if (confirmDelete) {
-            const updatedJobs = scheduledJobs.filter((_, jobIndex) => jobIndex !== index);
-            setScheduledJobs(updatedJobs);
-            localStorage.setItem('scheduledJobs', JSON.stringify(updatedJobs));
+            try {
+                const response = await fetch(`/api/schedule-scan/${index}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert("Task deleted successfully!");
+                    fetchScheduledJobs(); // Fetch updated jobs
+                } else {
+                    const result = await response.text();
+                    alert(`Error deleting task: ${result}`);
+                }
+            } catch (error) {
+                console.error('Error deleting task:', error);
+                alert(`An error occurred while deleting the task: ${error.message}`);
+            }
         }
     };
 
@@ -87,7 +143,6 @@ const performInstantScan = () => {
     return (
         <Router>
             <div className="app-container">
-                {/* Navigation Bar */}
                 <nav className="navbar">
                     <div className="logo-container">
                         <img src={logo} alt="App Logo" className="navbar-logo" />
@@ -102,22 +157,31 @@ const performInstantScan = () => {
                     </div>
                 </nav>
 
-                {/* Routes for Scheduler and Dashboard */}
                 <Routes>
                     <Route path="/" element={
                         <div className="scheduler-container">
-                            {/* Wrapper for the Title */}
                             <div className="title-wrapper">
                                 <h1 className="main-title">Automation Scheduler</h1>
                             </div>
 
                             <div className="scheduler-fields-table">
                                 <div className="scheduler-form">
-                                    {/* Instant Scan Section */}
                                     <div className="form-group">
                                         <h2>Instant Scan</h2>
                                         <label><i className="fas fa-globe"></i> Enter Webpage URL for Instant Scan:</label>
                                         <input type="text" placeholder="https://example.com" value={instantUrl} onChange={(e) => setInstantUrl(e.target.value)} required />
+                                        
+                                        {/* Add dropdown for scan type */}
+                                        <label><i className="fas fa-clipboard-list"></i> Select Scan Type for Instant Scan:</label>
+                                        <select onChange={(e) => setInstantScanType(e.target.value)} value={instantScanType} required>
+                                            <option value="" disabled>Select a scan type</option>
+                                            <option value="Passive Scan">Passive Scan</option>
+                                            <option value="Spider Scan">Spider Scan</option>
+                                            <option value="Ajax Spider Scan">Ajax Spider Scan</option>
+                                            <option value="Full Scan">Full Scan</option>
+                                            <option value="Machine Scan">Machine Scan</option>
+                                        </select>
+
                                         <button className="schedule-btn" onClick={performInstantScan}>
                                             <i className="fas fa-play-circle"></i> Start Instant Scan
                                         </button>
@@ -125,7 +189,6 @@ const performInstantScan = () => {
 
                                     <hr />
 
-                                    {/* Select Scan Type */}
                                     <div className="form-group">
                                         <label><i className="fas fa-clipboard-list"></i> Select Scan type (Script):</label>
                                         <select onChange={(e) => setScript(e.target.value)} value={script} required>
@@ -138,13 +201,11 @@ const performInstantScan = () => {
                                         </select>
                                     </div>
 
-                                    {/* Input for Webpage URL for Scheduled Scan */}
                                     <div className="form-group">
                                         <label><i className="fas fa-globe"></i> Enter Webpage URL for Scheduled Scan:</label>
                                         <input type="text" placeholder="https://example.com" value={scheduledUrl} onChange={(e) => setScheduledUrl(e.target.value)} required />
                                     </div>
 
-                                    {/* Select Interval */}
                                     <div className="form-group">
                                         <label><i className="fas fa-sync-alt"></i> Select Interval:</label>
                                         <select onChange={(e) => handleIntervalChange(e.target.value)} value={interval}>
@@ -154,7 +215,6 @@ const performInstantScan = () => {
                                         </select>
                                     </div>
 
-                                    {/* Calendar for Monthly Scan */}
                                     {interval === 'Monthly' && (
                                         <div className="form-group">
                                             <label><i className="fas fa-calendar"></i> Select Date for Monthly Scan:</label>
@@ -162,7 +222,6 @@ const performInstantScan = () => {
                                         </div>
                                     )}
 
-                                    {/* Daily and Weekly Day Selection */}
                                     {(interval === 'Daily' || interval === 'Weekly') && (
                                         <div className="form-group">
                                             <label><i className="fas fa-calendar-day"></i> Select Day:</label>
@@ -178,7 +237,6 @@ const performInstantScan = () => {
                                         </div>
                                     )}
 
-                                    {/* Select Time */}
                                     <div className="form-group">
                                         <label><i className="fas fa-clock"></i> Select Time:</label>
                                         <input type="time" onChange={(e) => setTime(e.target.value)} value={time} required />
@@ -189,7 +247,6 @@ const performInstantScan = () => {
                                     </button>
                                 </div>
 
-                                {/* Scheduled Tasks Table */}
                                 <div className="task-table-container">
                                     <h2 className="scheduled-tasks-heading">Scheduled Tasks</h2>
                                     <table className="unique-task-table">
@@ -199,7 +256,7 @@ const performInstantScan = () => {
                                                 <th>Interval</th>
                                                 <th>Day/Date</th>
                                                 <th>Time</th>
-                                                <th>Webpage URL</th>
+                                                <th>Webpage URL</th> {/* Display URL */}
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -208,9 +265,11 @@ const performInstantScan = () => {
                                                 <tr key={index}>
                                                     <td>{job.script}</td>
                                                     <td>{job.interval}</td>
-                                                    <td>{job.interval === 'Monthly' ? job.date : job.day}</td>
-                                                    <td>{job.time}</td>
-                                                    <td>{job.scheduledUrl}</td>
+                                                    {/* Format startTime to display date */}
+                                                    <td>{new Date(job.startTime).toLocaleDateString()}</td>
+                                                    {/* Format startTime to display time */}
+                                                    <td>{new Date(job.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+                                                    <td>{job.url}</td> {/* Use job.url instead of job.scheduledUrl */}
                                                     <td>
                                                         <button className="delete-btn" onClick={() => deleteTask(index)}>
                                                             <i className="fas fa-trash-alt"></i>

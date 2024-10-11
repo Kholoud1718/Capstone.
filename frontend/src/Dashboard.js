@@ -9,44 +9,146 @@ import {
 } from 'chart.js';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import './Dashboard.css';
+import { getMockScanActivity, getMockVulnerabilities } from './mockData'; // Mock data functions (still included)
 
-// Register the necessary Chart.js elements
+// Register Chart.js elements
 ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 const Dashboard = () => {
   const [severityFilter, setSeverityFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('Newest');
+  const [doughnutData, setDoughnutData] = useState({});
+  const [barData, setBarData] = useState({});
+  const [tableData, setTableData] = useState([]);
+  const [identifiedTotal, setIdentifiedTotal] = useState(0); // Total identified vulnerabilities
+  const [remediatedTotal, setRemediatedTotal] = useState(0); // Total remediated vulnerabilities
+  const [loading, setLoading] = useState(true); // Loading state
+  const [error, setError] = useState(null); // Error state
 
-  // Data for the charts
-  const doughnutData = {
-    labels: ['Critical', 'High', 'Medium', 'Low'],
-    datasets: [
-      {
-        label: 'Vulnerabilities',
-        data: [15, 5, 8, 2], // Adjust these values as needed
-        backgroundColor: ['#ff0000', '#ffcc00', '#ffa500', '#00ff00'],
-      },
-    ],
+  const useMockData = process.env.REACT_APP_USE_MOCK_DATA === 'true';  // Check if using mock data
+
+  // Function to fetch real data from the backend
+  const fetchRealData = () => {
+    // Fetch vulnerabilities from your backend API
+    fetch('http://localhost:4567/api/vulnerabilities')
+      .then(response => response.json())
+      .then(data => {
+        // Update Doughnut Chart Data
+        setDoughnutData({
+          labels: ['Critical', 'High', 'Medium', 'Low'],
+          datasets: [
+            {
+              label: 'Vulnerabilities',
+              data: data ? [data.critical || 0, data.high || 0, data.medium || 0, data.low || 0] : [0, 0, 0, 0],
+              backgroundColor: ['#ff0000', '#ffcc00', '#ffa500', '#00ff00'],
+            },
+          ],
+        });
+
+        // Update Bar Chart Data
+        setBarData({
+          labels: ['Critical', 'High', 'Medium', 'Low'],
+          datasets: [
+            {
+              label: 'Identified Vulnerabilities',
+              data: data.identified || [],
+              backgroundColor: '#ff0000',
+            },
+            {
+              label: 'Remediated Vulnerabilities',
+              data: data.remediated || [],
+              backgroundColor: '#00ff00',
+            },
+          ],
+        });
+
+        // Calculate totals for identified and remediated vulnerabilities
+        const totalIdentified = data.identified.reduce((a, b) => a + b, 0);
+        const totalRemediated = data.remediated.reduce((a, b) => a + b, 0);
+
+        setIdentifiedTotal(totalIdentified);
+        setRemediatedTotal(totalRemediated);
+        setLoading(false); // Stop loading
+      })
+      .catch(err => {
+        console.error('Error fetching vulnerabilities:', err);
+        setError('Error fetching vulnerabilities');
+        setLoading(false);
+      });
+
+    // Fetch scan activity data
+    fetch('http://localhost:4567/api/alerts')
+      .then(response => response.json())
+      .then(data => {
+        setTableData(data || []);  // Update table data
+      })
+      .catch(err => {
+        console.error('Error fetching scan activity data:', err);
+      });
   };
 
-  const barData = {
-    labels: ['Critical', 'High', 'Medium', 'Low'],
-    datasets: [
-      {
-        label: 'Identified Vulnerabilities',
-        data: [15, 5, 8, 2], // Adjust your data as needed
-        backgroundColor: '#ff0000',
-      },
-      {
-        label: 'Remediated Vulnerabilities',
-        data: [10, 4, 6, 1], // Adjust your data as needed
-        backgroundColor: '#00ff00',
-      },
-    ],
+  // useEffect hook to fetch data
+  useEffect(() => {
+    if (useMockData) {
+      // Use mock data
+      const mockVulnerabilities = getMockVulnerabilities();
+      const mockScanActivity = getMockScanActivity();
+
+      // Set data for Doughnut Chart
+      setDoughnutData({
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [
+          {
+            label: 'Vulnerabilities',
+            data: [mockVulnerabilities.critical, mockVulnerabilities.high, mockVulnerabilities.medium, mockVulnerabilities.low],
+            backgroundColor: ['#ff0000', '#ffcc00', '#ffa500', '#00ff00'],
+          },
+        ],
+      });
+
+      // Set data for Bar Chart
+      setBarData({
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [
+          {
+            label: 'Identified Vulnerabilities',
+            data: mockVulnerabilities.identified,
+            backgroundColor: '#ff0000',
+          },
+          {
+            label: 'Remediated Vulnerabilities',
+            data: mockVulnerabilities.remediated,
+            backgroundColor: '#00ff00',
+          },
+        ],
+      });
+
+      // Set mock table data
+      setTableData(mockScanActivity);
+
+      // Set totals
+      const totalIdentified = mockVulnerabilities.identified.reduce((a, b) => a + b, 0);
+      const totalRemediated = mockVulnerabilities.remediated.reduce((a, b) => a + b, 0);
+      setIdentifiedTotal(totalIdentified);
+      setRemediatedTotal(totalRemediated);
+
+      setLoading(false);
+    } else {
+      // Fetch real data
+      fetchRealData();
+    }
+  }, [useMockData]);
+
+  // Function to calculate progress percentages
+  const calculateProgress = (remediated, total) => {
+    return total === 0 ? 0 : Math.round((remediated / total) * 100);
   };
+
+  const assignedProgress = calculateProgress(identifiedTotal, identifiedTotal);
+  const resolvedProgress = calculateProgress(remediatedTotal, identifiedTotal);
 
   // Function to export table as PDF
   const exportPDF = (tableId) => {
@@ -79,11 +181,21 @@ const Dashboard = () => {
     link.click();
   };
 
+  // Handle loading state
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
   return (
     <div className="dashboard-container">
       <h1>Pentest Dashboard</h1>
 
       <div className="filters-container">
+        {/* Filters for Severity and Date */}
         <div>
           <label htmlFor="severity-filter" style={{ color: 'white' }}>Filter by Severity:</label>
           <select id="severity-filter" onChange={(e) => setSeverityFilter(e.target.value)} value={severityFilter}>
@@ -103,27 +215,28 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Vulnerability Cards and Circular Chart */}
+      {/* Vulnerability Cards */}
       <div className="cards-and-chart">
         <div className="vulnerability-cards-container">
           <div className="vulnerability-card critical">
             <h2>Critical</h2>
-            <p>15 Vulnerabilities Found</p>
+            <p>{doughnutData.datasets ? doughnutData.datasets[0].data[0] : 0} Vulnerabilities Found</p>
           </div>
           <div className="vulnerability-card high">
             <h2>High</h2>
-            <p>5 Vulnerabilities Found</p>
+            <p>{doughnutData.datasets ? doughnutData.datasets[0].data[1] : 0} Vulnerabilities Found</p>
           </div>
           <div className="vulnerability-card medium">
             <h2>Medium</h2>
-            <p>8 Vulnerabilities Found</p>
+            <p>{doughnutData.datasets ? doughnutData.datasets[0].data[2] : 0} Vulnerabilities Found</p>
           </div>
           <div className="vulnerability-card low">
             <h2>Low</h2>
-            <p>2 Vulnerabilities Found</p>
+            <p>{doughnutData.datasets ? doughnutData.datasets[0].data[3] : 0} Vulnerabilities Found</p>
           </div>
         </div>
 
+        {/* Charts and Table */}
         <div className="charts-and-tables-container">
           {/* Circular Chart */}
           <div className="circular-chart-container">
@@ -140,14 +253,14 @@ const Dashboard = () => {
             <h3>Progress Overview</h3>
             <p style={{ color: '#949695', fontWeight: 'bold' }}>Assigned Vulnerabilities Progress</p>
             <div className="progress-container">
-              <div className="progress-bar" style={{ width: '60%', backgroundColor: '#007bff' }}>
-                60%
+              <div className="progress-bar" style={{ width: `${assignedProgress}%`, backgroundColor: '#007bff' }}>
+                {assignedProgress}%
               </div>
             </div>
             <p style={{ color: '#949695', fontWeight: 'bold' }}>Resolved Vulnerabilities Progress</p>
             <div className="progress-container">
-              <div className="progress-bar" style={{ width: '80%', backgroundColor: '#007bff' }}>
-                80%
+              <div className="progress-bar" style={{ width: `${resolvedProgress}%`, backgroundColor: '#007bff' }}>
+                {resolvedProgress}%
               </div>
             </div>
           </div>
@@ -161,7 +274,7 @@ const Dashboard = () => {
                   <th>ID</th>
                   <th>Severity</th>
                   <th>Description</th>
-                  <th> Status</th>
+                  <th>Status</th>
                   <th>Rate</th>
                   <th>Time</th>
                   <th>Date</th>
@@ -170,72 +283,25 @@ const Dashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>101</td>
-                  <td>Critical</td>
-                  <td>Domain Controller </td>
-                  <td>Exploited</td>
-                  <td>90%</td>
-                  <td>07:00AM</td>
-                  <td>10/09</td>
-                  <td>Full Scan</td>
-                  <td>Completed</td>
-                </tr>
-                <tr>
-                  <td>102</td>
-                  <td>High</td>
-                  <td>Linux Metasploitable 2</td>
-                  <td>Exploited</td>
-                  <td>75%</td>
-                  <td>01:00AM</td>
-                  <td>05/09</td>
-                  <td> Machine Scan</td>
-                  <td>Completed</td>
-                </tr>
-                <tr>
-                  <td>103</td>
-                  <td>Medium</td>
-                  <td>Mutillidae Full Scan</td>
-                  <td>Exploited</td>
-                  <td>65%</td>
-                  <td>03:00PM</td>
-                  <td>10/09</td>
-                  <td>Full Scan</td>
-                  <td>In Progress</td>
-                </tr>
-                <tr>
-                  <td>104</td>
-                  <td>Low</td>
-                  <td>Mutillidae </td>
-                  <td>Not Exploited</td>
-                  <td>50%</td>
-                  <td>00:00AM</td>
-                  <td>24/10</td>
-                  <td>Ajax Spider Scan</td>
-                  <td>Pending</td>
-                </tr>
-                <tr>
-                  <td>105</td>
-                  <td>Critical</td>
-                  <td>Mutillidae </td>
-                  <td>Exploited</td>
-                  <td>85%</td>
-                  <td>6:00AM</td>
-                  <td>20/09</td>
-                  <td>Passive Scan</td>
-                  <td>Success</td>
-                </tr>
-                <tr>
-                  <td>106</td>
-                  <td>High</td>
-                  <td>Mutillidae Spider Scan</td>
-                  <td>Exploited</td>
-                  <td>70%</td>
-                  <td>01:00PM</td>
-                  <td>05/10</td>
-                  <td>Spider Scan</td>
-                  <td>In Progress</td>
-                </tr>
+                {tableData && Array.isArray(tableData) && tableData.length > 0 ? (
+                  tableData.map((row, index) => (
+                    <tr key={index}>
+                      <td>{row.id}</td>
+                      <td>{row.severity}</td>
+                      <td>{row.description}</td>
+                      <td>{row.status}</td>
+                      <td>{row.rate}</td>
+                      <td>{row.time}</td>
+                      <td>{row.date}</td>
+                      <td>{row.action}</td>
+                      <td>{row.scanStatus}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="9">No data available</td>
+                  </tr>
+                )}
               </tbody>
             </table>
             <div className="export-buttons">

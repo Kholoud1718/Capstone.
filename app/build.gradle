@@ -8,10 +8,12 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.quartz-scheduler:quartz:2.3.2'
-    implementation 'com.google.guava:guava:32.1.2-jre'
-     implementation 'com.sparkjava:spark-core:2.9.3' // Spark for REST APIs
-    implementation 'com.google.code.gson:gson:2.8.6' // Gson for JSON parsing
+    implementation 'com.sparkjava:spark-core:2.9.3'  // Spark Java
+    implementation 'com.google.code.gson:gson:2.10.1'  // Correct Gson version
+    implementation 'org.quartz-scheduler:quartz:2.3.2'  // Quartz
+    implementation 'org.slf4j:slf4j-api:1.7.32'
+    implementation 'org.slf4j:slf4j-simple:1.7.32'
+    implementation 'org.zaproxy:zap-clientapi:1.14.0'
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.3'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.3'
 }
