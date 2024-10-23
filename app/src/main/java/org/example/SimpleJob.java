@@ -17,7 +17,7 @@
 //         System.out.println("Scheduled job triggered at: " + new java.util.Date());
 //         System.out.println("URL: " + url + ", Scan Type: " + scanType);
 
-//         // Check if URL or scanType are null or empty
+//         
 //         if (url == null || url.isEmpty()) {
 //             System.err.println("Error: URL is missing or empty");
 //             return;
