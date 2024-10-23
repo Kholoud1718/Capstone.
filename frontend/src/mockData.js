@@ -15,12 +15,12 @@ export const getMockVulnerabilities = () => {
       {
         id: 101,
         severity: "Critical",
-        description: "Domain Controller",
+        description: "DVWADomain Controller",
         status: "Exploited",
         rate: "90%",
-        time: "07:00 AM",
-        date: "2024-10-09",
-        action: "Full Scan",
+        time: "09:00 AM",
+        date: "2024-10-19",
+        action: "Spider Scan",
         scanStatus: "Completed",
       },
       {

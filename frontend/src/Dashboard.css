@@ -18,13 +18,13 @@ h1 {
 .vulnerability-cards-container {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 20px; /* Further reduce margin */
+  margin-bottom: 20px; 
 }
 
 .vulnerability-card {
   flex: 1;
-  margin: 0 5px; /* Further reduce card margin */
-  padding: 3px; /* Further reduce padding */
+  margin: 0 5px; 
+  padding: 3px; 
   border-radius: 5px; /* Adjust border radius for smaller cards */
   text-align: center;
   font-size: 10px; /* Reduce font size further */
@@ -51,11 +51,11 @@ h1 {
 .charts-and-tables-container {
   display: flex;
   justify-content: space-between;
-  gap: 10px; /* Further reduce space between the charts and tables */
+  gap: 10px; 
 }
 
 .circular-chart-container, .bar-chart-container {
-  width: 45%; /* Reduce width slightly more */
+  width: 45%; 
   background-color: #282828;
   margin-bottom: 20px;
   padding: 10px; /* Reduce padding */

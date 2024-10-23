@@ -1,6 +1,6 @@
-/* General Page Background */
-body {
-  background: linear-gradient(135deg, #2e2e2e 0%, #b0b0b0 100%);
+y/* General Page Background */
+html,body {
+  background: linear-gradient(135deg, #2e2e2e 0%, #b2b3b1 100%);
   margin: 0;
   padding: 0;
   font-family: 'Roboto', sans-serif;
@@ -33,7 +33,6 @@ body {
   transition: color 0.3s ease;
   position: relative;
 }
-
 .nav-item::after {
   content: '';
   position: absolute;
@@ -44,11 +43,9 @@ body {
   bottom: -5px;
   transition: width 0.3s;
 }
-
 .nav-item:hover::after {
   width: 100%;
 }
-
 .login-btn {
   cursor: pointer;
   color: white;
@@ -70,12 +67,10 @@ body {
   background-color: #333;
   color: white;
 }
-
 .login-search {
   display: flex;
   gap: 10px;
 }
-
 /* Logo Styling */
 .navbar-logo {
   width: 80px;
@@ -93,7 +88,6 @@ body {
   max-width: 100%;
   flex-wrap: wrap;
 }
-
 .scheduler-fields-table {
   display: flex;
   flex-direction: row;
@@ -102,7 +96,6 @@ body {
   width: 100%;
   max-width: 100%;
 }
-
 .scheduler-form {
   width: 100%;
   max-width: 48%;
@@ -113,12 +106,10 @@ body {
   flex-grow: 1;
   color: white;
 }
-
 /* Icon and label alignment */
 .form-group {
   margin-bottom: 20px;
 }
-
 .form-group label {
   display: flex;
   align-items: center;
@@ -126,12 +117,10 @@ body {
   margin-bottom: 5px;
   font-size: 14px; /* Adjust label font size */
 }
-
 label img {
   width: 20px;
   height: 20px;
 }
-
 /* Input and select styling */
 input, select {
   width: 100%;
@@ -143,7 +132,6 @@ input, select {
   background-color: #cfcfd5;
   color: white;
 }
-
 select:hover, input:hover {
   border-color: #007bff;
 }
@@ -152,7 +140,6 @@ select:focus, input:focus {
   border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
 }
-
 button.schedule-btn {
   background-color: #90eda3;
   color: white;
@@ -162,17 +149,14 @@ button.schedule-btn {
   cursor: pointer;
   margin-top: 10px;
 }
-
 button:hover {
   background-color: #0056b3;
   box-shadow: 0 6px 10px rgba(0, 91, 187, 0.3);
 }
-
 button:active {
   transform: scale(0.98);
   box-shadow: 0 4px 8px rgba(0, 91, 187, 0.3);
 }
-
 /* Table Styling */
 .task-table-container {
   width: 100%;
@@ -184,20 +168,17 @@ button:active {
   flex-grow: 1;
   overflow: hidden; /* Fixed table within container */
 }
-
 .unique-task-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed; /* Keep columns fixed */
 }
-
 .unique-task-table th, .unique-task-table td {
   padding:12px 15px;
   text-align: center;
   border-bottom: 1px solid #908989;
   color: white;
 }
-
 .unique-task-table th {
   background-color: #acafb3;
   color: white;
@@ -205,7 +186,6 @@ button:active {
   font-size: 10px;
   text-transform: uppercase;
 }
-
 .unique-task-table td {
   color: #e0e0e0;
   border-radius: 5px;
@@ -213,21 +193,17 @@ button:active {
   font-size: 10px;  /* Reduced font size for table content */
   padding: 10px 15px;  /* Add padding to create more space */
 }
-
 .unique-task-table td:nth-child(5) { /* Target the Webpage URL column */
   word-wrap: break-word; /* Allow URL to wrap if too long */
   padding-right: 20px; /* Add more space to the right */
   max-width: 200px; /* Limit the width to avoid overlapping */
 }
-
 .unique-task-table tr:nth-child(even) {
   background-color: #26262a;
 }
-
 .unique-task-table tr:hover {
   background-color: #38383d;
 }
-
 button.delete-btn {
   background-color: red;
   color: white;
@@ -238,17 +214,14 @@ button.delete-btn {
   text-align: center;
   margin-left: 10px; /* Add space between button and URL */
 }
-
 button.delete-btn:hover {
   background-color: darkred;
 }
-
 /* Adjust the "Enter Webpage URL" and "Select Time" field widths */
 input[type="text"], input[type="time"] {
   width: 100%;
   box-sizing: border-box;
 }
-
 button.schedule-btn {
   width: 100%;
 }

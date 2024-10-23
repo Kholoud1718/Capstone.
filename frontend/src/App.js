@@ -17,6 +17,9 @@ const App = () => {
     const [scheduledUrl, setScheduledUrl] = useState(''); // Separate state for Scheduled Scan URL
     const [instantScanType, setInstantScanType] = useState(''); // New state for instant scan type
 
+    // Retrieve the client's time zone
+    const clientTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     // Load scheduled tasks from backend when component mounts
     useEffect(() => {
         fetchScheduledJobs();
@@ -26,7 +29,10 @@ const App = () => {
         try {
             const response = await fetch('/api/scheduled-scans');
             const jobs = await response.json();
-            setScheduledJobs(jobs); // Set the fetched jobs to state
+            setScheduledJobs(jobs.map(job => ({
+                ...job,
+                startTime: new Date(`${job.date}T${job.time}`) // Combining date and time into a Date object
+            })));
         } catch (error) {
             console.error('Error fetching scheduled jobs:', error);
         }
@@ -34,7 +40,7 @@ const App = () => {
 
     // Function to schedule the task
     const scheduleScript = async () => {
-        if (!script || (interval === 'Monthly' && !date) || !scheduledUrl) {
+        if (!script || !scheduledUrl || (interval === 'Monthly' && !date)) {
             alert('Please fill in all fields before scheduling a task!');
             return;
         }
@@ -46,12 +52,13 @@ const App = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    url: scheduledUrl, // Ensure 'url' is being passed correctly
+                    url: scheduledUrl,
                     interval,
                     day,
                     time,
                     date,
                     script,
+                    clientTimeZone
                 }),
             });
 
@@ -74,12 +81,11 @@ const App = () => {
 
     // Function to perform an instant scan with URL and scan type validation
     const performInstantScan = async () => {
-        if (!instantUrl || !instantScanType) { // Ensure both URL and scan type are selected
+        if (!instantUrl || !instantScanType) {
             alert('Please enter a URL and select a scan type for the instant scan!');
             return;
         }
 
-        // Validate the URL format
         if (!/^https?:\/\/.+\..+$/.test(instantUrl)) {
             alert('Please enter a valid URL that starts with http:// or https:// and has a valid domain.');
             return;
@@ -91,7 +97,7 @@ const App = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ url: instantUrl, scanType: instantScanType }),  // Include scanType in the request
+                body: JSON.stringify({ url: instantUrl, scanType: instantScanType }),
             });
 
             if (response.ok) {
@@ -152,7 +158,7 @@ const App = () => {
                         <li><Link to="/dashboard" className="nav-item"><i className="fas fa-tachometer-alt"></i> Dashboard</Link></li>
                     </ul>
                     <div className="login-search">
-                        <button className="login-btn"><i className="fas fa-sign-in-alt"></i> Login</button>
+                        <button className="login-btn"><i className="fas fa-sign-in-alt"></i> Logout</button>
                         <input type="text" placeholder="Search..." className="search-bar" />
                     </div>
                 </nav>
@@ -161,7 +167,7 @@ const App = () => {
                     <Route path="/" element={
                         <div className="scheduler-container">
                             <div className="title-wrapper">
-                                <h1 className="main-title">Automation Scheduler</h1>
+                                <h1 className="main-title">Automated Scan Controller</h1>
                             </div>
 
                             <div className="scheduler-fields-table">
@@ -256,7 +262,7 @@ const App = () => {
                                                 <th>Interval</th>
                                                 <th>Day/Date</th>
                                                 <th>Time</th>
-                                                <th>Webpage URL</th> {/* Display URL */}
+                                                <th>Webpage URL</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -265,11 +271,9 @@ const App = () => {
                                                 <tr key={index}>
                                                     <td>{job.script}</td>
                                                     <td>{job.interval}</td>
-                                                    {/* Format startTime to display date */}
                                                     <td>{new Date(job.startTime).toLocaleDateString()}</td>
-                                                    {/* Format startTime to display time */}
-                                                    <td>{new Date(job.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-                                                    <td>{job.url}</td> {/* Use job.url instead of job.scheduledUrl */}
+                                                    <td>{new Date(job.startTime).toLocaleTimeString()}</td>
+                                                    <td>{job.url}</td>
                                                     <td>
                                                         <button className="delete-btn" onClick={() => deleteTask(index)}>
                                                             <i className="fas fa-trash-alt"></i>

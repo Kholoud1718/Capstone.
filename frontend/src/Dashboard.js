@@ -1,11 +1,11 @@
 import {
-  ArcElement,
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  Tooltip,
+    ArcElement,
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    Tooltip,
 } from 'chart.js';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
@@ -32,7 +32,7 @@ const Dashboard = () => {
 
   // Function to fetch real data from the backend
   const fetchRealData = () => {
-    // Fetch vulnerabilities from your backend API
+    // Fetch vulnerabilities from the backend API
     fetch('http://localhost:4567/api/vulnerabilities')
       .then(response => response.json())
       .then(data => {
