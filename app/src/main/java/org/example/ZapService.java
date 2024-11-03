@@ -145,7 +145,7 @@ public class ZapService {
                 progress[0] = getScanProgress(scanId);
                 System.out.println("Current scan progress: " + progress[0] + "%");
                 if (progress[0] >= 100) {
-                    scheduler.shutdown(); // Stop checking once the scan completes
+                    scheduler.shutdown(); 
                 }
             } catch (ClientApiException e) {
                 e.printStackTrace();  // Print stack trace for debugging
