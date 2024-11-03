@@ -1,6 +1,12 @@
 {
     "configurations": [
-        
+        {
+            "type": "java",
+            "name": "App",
+            "request": "launch",
+            "mainClass": "org.example.App",
+            "projectName": "app"
+        },
         {
             "name": "Launch Edge",
             "request": "launch",
@@ -8,7 +14,6 @@
             "url": "http://localhost:8080",
             "webRoot": "${workspaceFolder}"
         },
-
         {
             "type": "msedge",
             "name": "http://localhost:3000/",
