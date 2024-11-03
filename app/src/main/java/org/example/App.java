@@ -32,7 +32,7 @@ public class App {
         // Serve the frontend files
         staticFiles.externalLocation("frontend/build");
 
-        // Set up routes for scheduling and instant scans
+        // Set up routes for scans
         app.setupScheduledScans();
     }
 
