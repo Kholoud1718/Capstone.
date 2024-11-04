@@ -54,7 +54,7 @@ A React and Java-based application for scheduling and performing automated secur
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/your-repo-name.git
+   git clone https://github.com/Kholoud1718/MyNewProject-.git
    cd your-repo-name
    ```
 
