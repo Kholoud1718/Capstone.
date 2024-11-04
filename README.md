@@ -124,7 +124,6 @@ The frontend is built with React and includes the following components:
 - **Charts**: Uses `react-chartjs-2` to visualize vulnerability data.
 - **Export Options**: Allows exporting data as PDF and CSV using `jsPDF` and `jspdf-autotable`.
 
----
 
 ## Backend
 
