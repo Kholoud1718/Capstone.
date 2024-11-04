@@ -77,7 +77,7 @@ A React and Java-based application for scheduling and performing automated secur
    - Start both the backend and frontend. By default:
      - Frontend will be on `http://localhost:3000`
      - Backend will be on `http://localhost:4567`
-
+     - ZAP will be on `http://localhost:8080`
 ---
 
 ## API Endpoints
