@@ -1,4 +1,7 @@
+// Created by Kholoud Aldhafeeri
 package org.example;
+
+import static spark.Spark.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -13,11 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.google.gson.Gson;
-
-import static spark.Spark.delete;
-import static spark.Spark.get;
-import static spark.Spark.post;
-import static spark.Spark.staticFiles;
 
 public class App {
 
@@ -106,7 +104,7 @@ public class App {
 
             // Check if the index is within the valid range of the scheduled scans list
             if (index >= 0 && index < scheduledScans.size()) {
-                scheduledScans.remove(index);  // Remove the task from the list by index
+                scheduledScans.remove(index);  
                 res.status(200);
                 return "Task deleted successfully";
             } else {

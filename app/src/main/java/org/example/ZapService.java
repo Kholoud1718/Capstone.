@@ -1,3 +1,5 @@
+// Created by Kholoud Aldhafeeri
+
 package org.example;
 
 import java.util.ArrayList;
@@ -44,7 +46,7 @@ public class ZapService {
                 response = zapClient.ascan.scan(targetUrl, "True", "False", null, null, null, 0);
                 break;
             case "passive scan":
-                // Passive scan happens automatically, we can just fetch the alerts
+                // Passive scan happens automatically
                 response = zapClient.core.alerts(targetUrl, null, null);
                 break;
             default:
@@ -82,7 +84,7 @@ public class ZapService {
         results.put("identified", extractIdentifiedVulnerabilities(response));
         results.put("remediated", extractRemediatedVulnerabilities(response));
 
-        // Convert to JSON using Gson (or Jackson if preferred)
+        // Convert to JSON using Gson 
         return new Gson().toJson(results);
     }
 
@@ -111,7 +113,6 @@ public class ZapService {
         if (response instanceof ApiResponseList) {
             ApiResponseList list = (ApiResponseList) response;
             for (ApiResponse item : list.getItems()) {
-                // Assuming we want to count vulnerabilities for the identified array
                 identified.add(10);  // Example value, adjust logic as needed
             }
         }
